@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wifi Bill Manager</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f3f5fb;--card:#fff;--text:#1a1d29;--muted:#6b7280;--line:#e8eaf2;--accent:#5b6cff;--accent2:#8b5cf6;--ok:#10b981;--bad:#ef4444;--warn:#f59e0b;--soft:#eef0ff;--shadow:0 4px 18px rgba(30,40,90,.07)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#0f1117;--card:#181b25;--text:#e8eaf2;--muted:#9aa1b5;--line:#272b3a;--accent:#7b8aff;--accent2:#a78bfa;--soft:#222640;--shadow:0 4px 18px rgba(0,0,0,.3)}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0f1117;--card:#181b25;--text:#e8eaf2;--muted:#9aa1b5;--line:#272b3a;--accent:#7b8aff;--accent2:#a78bfa;--soft:#222640;--shadow:0 4px 18px rgba(0,0,0,.3)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1280px;margin:0 auto;padding:16px 16px 56px}
+header{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-radius:18px;padding:20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;box-shadow:var(--shadow);margin-bottom:16px}
+header h1{margin:0;font-size:1.35rem}header p{margin:2px 0 0;opacity:.85;font-size:.85rem}
+.hr{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mnav{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.18);border-radius:12px;padding:4px}
+.mnav b{min-width:130px;text-align:center}
+header button{background:rgba(255,255,255,.25);color:#fff;padding:8px 12px}
+header button.w{background:#fff;color:var(--accent)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:var(--shadow)}
+h2{font-size:1rem;margin:0 0 12px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--shadow);border-left:4px solid var(--accent)}
+.stat.g{border-left-color:var(--ok)}.stat.r{border-left-color:var(--bad)}.stat.w{border-left-color:var(--warn)}
+.stat b{display:block;font-size:1.25rem}.stat span{color:var(--muted);font-size:.78rem}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}
+.grid3 .card{margin-bottom:0}.grid3{margin-bottom:16px}
+.pie{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.donut{width:120px;height:120px;border-radius:50%;flex:none;position:relative}
+.donut::after{content:attr(data-c);position:absolute;inset:24px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;text-align:center}
+.leg{flex:1;min-width:120px;font-size:.84rem}.leg div{display:flex;align-items:center;gap:8px;margin:4px 0}
+.leg i{width:11px;height:11px;border-radius:3px;flex:none}.leg em{margin-left:auto;font-style:normal;font-weight:600}
+.trend{display:flex;align-items:flex-end;gap:10px;height:140px}
+.tc{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;gap:4px}
+.tb{display:flex;align-items:flex-end;gap:3px;width:100%;flex:1}
+.tb i{flex:1;border-radius:5px 5px 0 0;min-height:3px}
+.tc small{color:var(--muted);font-size:.72rem}
+label{display:flex;flex-direction:column;font-size:.76rem;color:var(--muted);gap:4px}
+input,select,textarea{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 10px;width:100%}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+input[type=checkbox]{width:22px;height:22px;accent-color:var(--ok);cursor:pointer}
+button,a.btn{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:9px 14px;background:var(--accent);color:#fff;font-weight:600;text-decoration:none;display:inline-block}
+button.ghost,a.ghost{background:transparent;color:var(--muted);padding:5px 9px;font-weight:400;border:1px solid var(--line)}
+button.sec{background:var(--soft);color:var(--accent)}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0;align-items:center}
+.tools input,.tools select{width:auto;flex:1;min-width:120px}
+.chips{display:flex;gap:6px}
+.chip{background:var(--soft);color:var(--muted);padding:7px 12px;border-radius:99px;font-weight:500}
+.chip.on{background:var(--accent);color:#fff}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:1120px}
+th{font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;text-align:left;color:var(--muted);padding:8px;border-bottom:1px solid var(--line)}
+td{padding:9px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+td.n{text-align:right}tr:hover td{background:var(--soft)}
+td input.amt{width:84px;text-align:right;padding:6px 8px}
+td select{padding:6px 8px;width:auto}
+.who{display:flex;align-items:center;gap:10px}
+.av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none}
+small{display:block;color:var(--muted)}
+.mac{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.8rem}
+.badge{font-size:.72rem;font-weight:600;padding:3px 10px;border-radius:99px}
+.badge.p{background:rgba(16,185,129,.15);color:var(--ok)}.badge.u{background:rgba(245,158,11,.16);color:var(--warn)}.badge.o{background:rgba(239,68,68,.15);color:var(--bad)}
+.red{color:var(--bad);font-weight:600}
+.empty{color:var(--muted);text-align:center;padding:22px 0}
+.note{color:var(--muted);font-size:.78rem;margin:10px 0 0}
+.acts{display:flex;gap:6px;align-items:center}
+td .acts button.sec{padding:5px 10px;font-size:.82rem}
+.rset{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+#adlg{width:min(420px,94vw)}
+dialog{border:1px solid var(--line);border-radius:18px;background:var(--card);color:var(--text);padding:20px;width:min(520px,94vw);box-shadow:0 20px 60px rgba(0,0,0,.35)}
+dialog::backdrop{background:rgba(10,12,25,.55)}
+dialog form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+dialog .full{grid-column:1/-1}
+dialog .btns{grid-column:1/-1;display:flex;gap:8px;justify-content:flex-end}
+.rbox{border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.rset{align-items:start}
+.pair{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;border:1px solid var(--line);border-radius:12px;padding:10px}
+.pair label:first-child{grid-column:1/-1}
+.pair label:first-child input{font-size:1.05rem;font-weight:600;padding:12px}
+.pair label:nth-child(2){grid-column:1;grid-row:2}
+.pair button{grid-column:2;grid-row:2;align-self:end;height:42px;min-width:42px}
+.tag{display:inline-block;font-size:.68rem;font-weight:600;padding:1px 7px;border-radius:99px;background:var(--soft);color:var(--accent)}
+.line{min-height:22px;white-space:nowrap}.nw{white-space:nowrap}
+#bimg{max-width:100%;max-height:52vh;margin-left:auto!important;margin-right:auto!important;border:1px solid var(--line);border-radius:8px;display:block;margin-bottom:12px}
+.dev{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;margin-bottom:8px}
+.agrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.agrid .full{grid-column:1/-1}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#1f2335;color:#fff;padding:10px 18px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99}
+#toast.on{opacity:1}
+.tw table{border:1px solid var(--grid)}
+.tw th,.tw td{border:1px solid var(--grid)}
+.tw tbody tr:hover td{background:transparent}
+.tw th{background:var(--soft);white-space:nowrap}
+:root{--grid:#c9cde0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--grid:#434961}}
+:root[data-theme="dark"]{--grid:#434961}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div><h1>📶 Wifi Bill Manager</h1><p>Customers, routers &amp; monthly collection</p></div>
+    <div class="hr">
+      <div class="mnav"><button id="prev">◀</button><b id="mlabel"></b><button id="next">▶</button></div>
+      <button id="adminbtn" type="button" title="Service name, contact and bill note">🛠 Admin</button>
+      <button id="theme" aria-label="Toggle theme">🌓</button>
+      <button class="w" id="add">＋ Add customer</button>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><b id="sTotal">–</b><span>Month total</span></div>
+    <div class="stat g"><b id="sPaid">–</b><span>Collected</span></div>
+    <div class="stat r"><b id="sDue">–</b><span>Pending this month</span></div>
+    <div class="stat w"><b id="sOut">–</b><span>Total due (till today)</span></div>
+    <div class="stat"><b id="sRate">–</b><span>Collection rate · <span id="sCount"></span></span></div>
+  </div>
+
+  <div class="grid3">
+    <div class="card"><h2>Paid vs Unpaid</h2><div class="pie"><div class="donut" id="d1"></div><div class="leg" id="l1"></div></div></div>
+    <div class="card"><h2>Income by router</h2><div class="pie"><div class="donut" id="d2"></div><div class="leg" id="l2"></div></div></div>
+    <div class="card"><h2>Income · last 6 months <span id="trendSum" style="font-weight:400;color:var(--muted);font-size:.78rem"></span></h2><div class="trend" id="trend"></div></div>
+  </div>
+
+  <div class="card">
+    <div class="bar"><h2 style="margin:0">Customers</h2>
+      <div class="hr"><button class="sec" id="daybtn">📅 Billing date</button><button class="sec" id="allpaid">✓ Mark shown paid</button><button class="sec" id="pdf">⬇ PDF report</button></div></div>
+    <div class="tools">
+      <input id="q" placeholder="🔍 Search name, flat, phone, device, MAC">
+      <select id="fr"></select>
+      <select id="ftype"><option value="all">Prepaid + Postpaid</option><option value="pre">Prepaid</option><option value="post">Postpaid</option></select>
+      <select id="sort"><option value="name">Sort: Name</option><option value="flat">Sort: Flat</option><option value="bill">Sort: Bill (high)</option><option value="date">Sort: Due date</option><option value="status">Sort: Unpaid first</option></select>
+      <div class="chips" id="chips"></div>
+    </div>
+    <div class="tw"><table>
+      <thead><tr><th>Customer name</th><th>Flat</th><th>Device</th><th>MAC</th><th>Join date</th><th>Router</th><th class="n">Bill</th><th>Status</th><th class="n">Due</th><th>Paid · Method</th><th>Actions</th></tr></thead>
+      <tbody id="body"></tbody>
+      <tfoot><tr><td colspan="6" style="font-weight:600">Shown total</td><td class="n" style="font-weight:700" id="ft">–</td><td></td><td class="n red" id="fd">–</td><td colspan="2"></td></tr></tfoot>
+    </table></div>
+    <p class="note" id="where"></p>
+  </div>
+
+  <div class="card">
+    <div class="bar"><h2 style="margin:0">⚙ Routers</h2><button class="sec" id="showpw">👁 Show passwords</button></div>
+    <p class="note" style="margin:6px 0 12px">Passwords are stored unencrypted, also inside backup files. Keep them private. They are not printed in the PDF report.</p>
+    <div class="rset" id="rset"></div>
+  </div>
+  <div class="card"><h2>💾 Backup</h2>
+    <div class="hr"><button class="sec" id="bk">Download backup</button><button class="sec" id="rs">Restore backup</button></div>
+    <input type="file" id="file" accept=".json" hidden>
+    <p class="note">Download a backup regularly. Restore replaces all current data.</p></div>
+</main>
+
+<dialog id="dlg">
+  <h2 id="dt">Add customer</h2>
+  <form id="form" novalidate>
+    <label>Customer name<input id="name" required></label>
+    <label>Flat number<input id="flat" placeholder="যেমন: 3B" maxlength="20"></label>
+    <label>Phone<input id="phone" type="tel" placeholder="01XXXXXXXXX"></label>
+    <div class="full"><div id="devs"></div><button type="button" class="sec" id="adddev">＋ Add another device / phone</button></div>
+    <label>Router<select id="router"></select></label>
+    <label>Monthly bill<input type="number" id="bill" min="0" step="0.01" required></label>
+    <label>Payment method<select id="method"></select></label>
+      <label>Join date<input type="date" id="join"></label>
+      <label>Payment type<select id="type"><option value="pre">Prepaid (আগে টাকা, পরে ব্যবহার)</option><option value="post">Postpaid (ব্যবহারের পরে টাকা)</option></select></label>
+    <label>Billing starts (month)<input type="month" id="start"></label>
+    <label class="full">Note<textarea id="notex" rows="2" placeholder="Optional"></textarea></label>
+    <p class="note full" id="warn" style="color:var(--bad);margin:0"></p>
+    <div class="btns"><button type="button" class="ghost" id="cancel">Cancel</button><button type="button" id="savebtn">Save</button></div>
+  </form>
+</dialog>
+<dialog id="bdlg">
+  <h2>Customer bill</h2>
+  <img id="bimg" alt="Bill preview">
+  <div class="rset" id="paybox" style="margin-bottom:12px">
+    <label>Payment date<input type="date" id="bdate"></label>
+    <label>Method<select id="bmethod"></select></label>
+  </div>
+  <div class="hr" style="justify-content:flex-end"><button id="bpay"></button><button class="sec" id="bjpg">⬇ JPG</button><button class="sec" id="bpdf">⬇ PDF</button><button class="ghost" id="bclose">Close</button></div>
+</dialog>
+<dialog id="cdlg"><p id="cmsg" style="margin:0 0 16px"></p>
+  <div class="hr" style="justify-content:flex-end"><button type="button" class="ghost" id="cno">Cancel</button><button type="button" id="cyes">OK</button></div></dialog>
+<dialog id="ddlg">
+  <h2>📅 Billing date</h2>
+  <label>Payment date of every month (for all customers)<select id="dday"></select></label>
+  <p class="note">Prepaid: pay by this date of the same month. Postpaid: pay by this date of the next month.</p>
+  <div class="hr" style="justify-content:flex-end;margin-top:14px"><button type="button" class="ghost" id="dcancel">Cancel</button><button type="button" id="dsave">Save</button></div>
+</dialog>
+<dialog id="adlg">
+  <h2>🛠 Service info (shown on bills)</h2>
+  <div class="agrid">
+    <label class="full">Service name<input id="aname" maxlength="50" placeholder="Your service name"></label>
+    <label>Contact number<input id="aphone" type="tel" maxlength="40" placeholder="01XXXXXXXXX"></label>
+    <label>Email<input id="aemail" type="email" maxlength="60"></label>
+    <label class="full">Address<input id="aaddr" maxlength="90"></label>
+    <label class="full">Note on bill<textarea id="anote" rows="2" maxlength="400" placeholder="যেমন: bKash: 01XXXXXXXXX"></textarea></label>
+    <div class="full hr" style="justify-content:flex-end"><button type="button" class="ghost" id="acancel">Cancel</button><button type="button" id="asave">Save</button></div>
+  </div>
+</dialog>
+<div id="toast"></div>
+
+<script>
+(function(){
+  var SYM="৳",COL=["#5b6cff","#10b981","#f59e0b","#ec4899"],METHODS=["Cash","bKash","Nagad","Bank"];
+  var state={customers:[],routers:["Router 1","Router 2","Router 3","Router 4"],info:blankInfo(),biz:blankBiz(),dueDay:0},showPw=false;
+  function dayOf(c){return state.dueDay||(c.date?+c.date.slice(8,10):0)}
+  function blankBiz(a){a=a||{};var o={};["name","phone","email","address","note"].forEach(function(k){o[k]=a[k]?String(a[k]):""});return o}
+  function blankInfo(a){return [0,1,2,3].map(function(i){var x=(a&&a[i])||{};return {ip:x.ip||"",user:x.user||"",pass:x.pass||"",ssids:Array.isArray(x.ssids)&&x.ssids.length?x.ssids.map(function(w){return {name:(w&&w.name)||"",pass:(w&&w.pass)||""}}):[{name:"",pass:""},{name:"",pass:""}]}})}
+  function post(c){return c.type==="post"}
+  function fdate(v){if(!v)return "–";var p=v.split("-");return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})}
+  var nd=new Date(),real=nd.getFullYear()+"-"+String(nd.getMonth()+1).padStart(2,"0"),cur=real,filter="all",ref=null,t=null,editing=null,current=[],LS="wifi-mgr-v3";
+  var $=function(id){return document.getElementById(id)};
+  function fmt(n){return SYM+Number(n).toLocaleString(undefined,{maximumFractionDigits:2})}
+  function shift(m,d){var p=m.split("-"),dt=new Date(+p[0],+p[1]-1+d,1);return dt.getFullYear()+"-"+String(dt.getMonth()+1).padStart(2,"0")}
+  function mlabel(m,s){var p=m.split("-");return new Date(+p[0],+p[1]-1,1).toLocaleString(undefined,s?{month:"short"}:{month:"long",year:"numeric"})}
+  function active(c,m){return !c.start||c.start<=m}
+  function isPaid(c,m){var v=c.paid&&c.paid[m||cur];return v===true||typeof v==="number"}
+  function billFor(c,m){m=m||cur;var b=c.bill;if(c.rates&&c.rates.length){b=c.rates[0][1];c.rates.forEach(function(r){if(r[0]<=m)b=r[1]})}return b}
+  function amount(c,m){m=m||cur;var v=c.paid&&c.paid[m];return typeof v==="number"?v:billFor(c,m)}
+  function setPaid(c,m,on,method){c.paid=c.paid||{};c.pd=c.pd||{};c.pm=c.pm||{};if(!isPaid(c,m)){c.paid[m]=billFor(c,m);c.pd[m]=on||today();c.pm[m]=method||c.method||"Cash"}}
+  function setBill(c,v,m){
+    if(v===billFor(c,m))return;
+    var old=c.rates&&c.rates.length?c.rates:[["0000-00",c.bill]];
+    /* months already paid keep the amount they were paid at */
+    Object.keys(c.paid||{}).forEach(function(k){if(c.paid[k]===true)c.paid[k]=billFor(c,k)});
+    c.rates=(c.start&&m<=c.start)?[["0000-00",v]]:old.filter(function(r){return r[0]<m}).concat([[m,v]]);
+    c.bill=v;
+  }
+  function dueDate(c,m){m=m||cur;var day=dayOf(c);if(!day)return null;var p=(post(c)?shift(m,1):m).split("-"),last=new Date(+p[0],+p[1],0).getDate();return new Date(+p[0],+p[1]-1,Math.min(day,last))}
+  function status(c){if(isPaid(c))return "p";var d=dueDate(c);if(d){var td=new Date();td.setHours(0,0,0,0);return d<td?"o":"u"}return (post(c)?shift(cur,1):cur)<real?"o":"u"}
+  /* a month is added to Due when it has ended, or (prepaid, running month) after its payment date */
+  function counted(c,m){if(m<real)return true;if(m>real||post(c))return false;var d=dueDate(c,m),td=new Date();td.setHours(0,0,0,0);return !!d&&d<td}
+  function unpaid(c){var a=[],m=c.start;if(!m)return a;while(m<=real){if(!isPaid(c,m))a.push(m);m=shift(m,1)}return a}
+  function dueMonths(c){return unpaid(c).filter(function(m){return counted(c,m)})}
+  function sumBills(c,ms){return ms.reduce(function(s,m){return s+billFor(c,m)},0)}
+  function balance(c){return sumBills(c,dueMonths(c))}
+  /* what one customer bill asks for: older unpaid months + the month on screen */
+  function invoiceData(c){var prev=unpaid(c).filter(function(m){return m<cur}),now=isPaid(c)?0:billFor(c),ps=sumBills(c,prev);return {prev:prev,prevSum:ps,now:now,total:ps+now}}
+  function ask(msg,yes){var d=$("cdlg");$("cmsg").textContent=msg;$("cno").onclick=function(){d.close()};$("cyes").onclick=function(){d.close();yes()};d.showModal()}
+  function el(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+  function cell(tr,cls){var td=el("td",cls);tr.appendChild(td);return td}
+  function toast(m){var x=$("toast");x.textContent=m;x.className="on";clearTimeout(toast.t);toast.t=setTimeout(function(){x.className=""},2200)}
+
+  function pie(d,l,items,center){
+    var tot=items.reduce(function(s,i){return s+i.v},0),acc=0,parts=[],L=$(l);L.textContent="";
+    items.forEach(function(i){
+      if(tot>0&&i.v>0){var a=acc/tot*100;acc+=i.v;parts.push(i.c+" "+a+"% "+(acc/tot*100)+"%")}
+      var r=el("div"),sw=el("i");sw.style.background=i.c;r.appendChild(sw);r.appendChild(el("span",null,i.n));r.appendChild(el("em",null,i.t));L.appendChild(r);
+    });
+    var D=$(d);D.style.background=parts.length?"conic-gradient("+parts.join(",")+")":"var(--line)";D.setAttribute("data-c",center);
+  }
+
+  function render(){
+    real=today().slice(0,7);
+$("mlabel").textContent=mlabel(cur);$("daybtn").textContent="📅 Billing date"+(state.dueDay?": "+state.dueDay:"");    var all=state.customers.filter(function(c){return active(c,cur)}),total=0,paid=0,np=0,out=0;
+    all.forEach(function(c){if(isPaid(c)){paid+=amount(c);total+=amount(c);np++}else total+=billFor(c)});
+    state.customers.forEach(function(c){out+=balance(c)});
+    $("sTotal").textContent=fmt(total);$("sPaid").textContent=fmt(paid);$("sDue").textContent=fmt(total-paid);$("sOut").textContent=fmt(out);
+    $("sRate").textContent=total?Math.round(paid/total*100)+"%":"–";$("sCount").textContent=np+"/"+all.length;
+    pie("d1","l1",[{n:"Paid",v:np,c:"#10b981",t:np},{n:"Unpaid",v:all.length-np,c:"#ef4444",t:all.length-np}],all.length?Math.round(np/all.length*100)+"%":"–");
+    pie("d2","l2",state.routers.map(function(n,i){var s=0,k=0;all.forEach(function(c){if(c.router===i){s+=isPaid(c)?amount(c):billFor(c);k++}});return {n:n+" ("+k+")",v:s,c:COL[i],t:fmt(s)}}),fmt(total));
+
+    var tr6=$("trend");tr6.textContent="";var data=[],mx=1,sum6=0;
+    for(var k=5;k>=0;k--){var m=shift(cur,-k),p=0;state.customers.forEach(function(c){if(active(c,m)&&isPaid(c,m))p+=amount(c,m)});data.push([m,p]);sum6+=p;if(p>mx)mx=p}
+    $("trendSum").textContent="· Total "+fmt(sum6);
+    data.forEach(function(x){
+      var c=el("div","tc"),tb=el("div","tb"),g=el("i"),v=x[1],lb=v>=1000?SYM+(Math.round(v/100)/10)+"k":SYM+v;
+      g.style.height=Math.max(v/mx*100,v?4:2)+"%";g.style.background="var(--ok)";g.style.maxWidth="38px";g.style.opacity=x[0]===cur?"1":".45";
+      tb.style.justifyContent="center";c.title=mlabel(x[0])+" — income "+fmt(v);
+      var top=el("small",null,v?lb:"–");top.style.fontSize=".68rem";top.style.fontWeight=x[0]===cur?"700":"400";
+      c.appendChild(top);tb.appendChild(g);c.appendChild(tb);c.appendChild(el("small",null,mlabel(x[0],1)));tr6.appendChild(c);
+    });
+
+    ["router","fr"].forEach(function(id){
+      var s=$(id),v=s.value;s.textContent="";
+      if(id==="fr"){var o=el("option",null,"All routers");o.value="all";s.appendChild(o)}
+      state.routers.forEach(function(n,i){var o=el("option",null,n);o.value=i;s.appendChild(o)});
+      if(v)s.value=v;
+    });
+
+    var q=$("q").value.trim().toLowerCase(),fr=$("fr").value,so=$("sort").value;
+    var list=all.filter(function(c){
+      if(q&&(c.name+" "+c.flat+" "+c.phone+" "+c.devices.map(function(d){return d.name+" "+d.mac}).join(" ")).toLowerCase().indexOf(q)<0)return false;
+      if(fr&&fr!=="all"&&String(c.router)!==fr)return false;
+      var ty=$("ftype").value;if(ty!=="all"&&(post(c)?"post":"pre")!==ty)return false;
+      var s=status(c);if(filter==="paid"&&s!=="p")return false;if(filter==="unpaid"&&s==="p")return false;return true;
+    }).sort(function(a,b){
+      if(so==="flat")return a.flat.localeCompare(b.flat,undefined,{numeric:true});
+      if(so==="bill")return billFor(b)-billFor(a);
+      if(so==="date")return (dayOf(a)||99)-(dayOf(b)||99);
+      if(so==="status")return (isPaid(a)?1:0)-(isPaid(b)?1:0)||a.name.localeCompare(b.name);
+      return a.name.localeCompare(b.name);
+    });
+    current=list;
+    var body=$("body");body.textContent="";var ft=0,fd=0;
+    if(!list.length){var t0=el("tr"),d0=cell(t0,"empty");d0.colSpan=11;d0.textContent=all.length?"No customers match":"No customers yet. Tap “＋ Add customer”.";body.appendChild(t0)}
+    list.forEach(function(c){
+      ft+=isPaid(c)?amount(c):billFor(c);var tr=el("tr"),w=el("div","who");
+      w.appendChild(el("div","av",(c.name||"?").charAt(0).toUpperCase()));
+      var wt=el("div");wt.appendChild(el("span",null,c.name));wt.appendChild(el("small",null,c.phone||"No phone"));w.appendChild(wt);cell(tr).appendChild(w);
+      cell(tr,"nw").textContent=c.flat||"–";
+      var c1=cell(tr),c2=cell(tr);c1.textContent=c.devices[0].name||"–";c2.className="mac";c2.textContent=c.devices[0].mac||"–";
+      cell(tr,"nw").textContent=fdate(c.join);
+      cell(tr,"nw").textContent=state.routers[c.router];
+      var d=dueDate(c);
+      var bc=cell(tr,"n");bc.appendChild(el("span",null,fmt(isPaid(c)?amount(c):billFor(c))));bc.appendChild(el("small","nw","Pay by "+(d?d.toLocaleDateString("en-GB",{day:"numeric",month:"short"}):"–")));
+      var sc=cell(tr);sc.appendChild(el("span","tag",post(c)?"Postpaid":"Prepaid"));
+      var dm=dueMonths(c),bl=sumBills(c,dm),dc=cell(tr,"n"+(bl?" red":""));fd+=bl;dc.appendChild(el("span",null,bl?fmt(bl):"–"));
+      if(dm.length)dc.appendChild(el("small","nw",dm.length>2?dm.length+" months":dm.map(function(m){return mlabel(m,1)}).join(", ")));
+      var pc=cell(tr),pw=el("div","acts"),cb=el("input");cb.type="checkbox";cb.checked=isPaid(c);cb.setAttribute("aria-label","Paid");
+      cb.onchange=function(){if(cb.checked){setPaid(c,cur);save();render();return}cb.checked=true;ask("Remove payment of "+c.name+" for "+mlabel(cur)+"?",function(){delete c.paid[cur];delete c.pm[cur];delete c.pd[cur];save();render()})};
+      pw.appendChild(cb);
+      pc.appendChild(pw);pw.appendChild(el("span",null,isPaid(c)?c.pm[cur]||"Cash":c.method||"Cash"));
+      if(isPaid(c)&&c.pd[cur])pc.appendChild(el("small","nw","on "+fdate(c.pd[cur])));
+      var ac=cell(tr),aw=el("div","acts");
+      var iv=invoiceData(c),bb=el("button","ghost","🧾");bb.title="Bill (PDF / JPG)";bb.onclick=function(){openBill(c)};aw.appendChild(bb);
+      if(c.phone&&cur<=real&&iv.total>0&&!(post(c)&&cur===real&&!iv.prevSum)){
+        var ph=c.phone.replace(/[০-৯]/g,function(d){return "০১২৩৪৫৬৭৮৯".indexOf(d)}).replace(/\D/g,"");if(ph.indexOf("0")===0)ph="88"+ph;
+        var wa=el("a","ghost","💬");wa.title="WhatsApp reminder";wa.target="_blank";wa.rel="noopener";
+        var msg="Assalamu alaikum "+c.name+", your wifi bill:";
+        if(iv.now)msg+=" "+mlabel(cur)+": "+fmt(iv.now)+".";
+        if(iv.prevSum)msg+=" Previous due: "+fmt(iv.prevSum)+". Total: "+fmt(iv.total)+".";
+        wa.href="https://wa.me/"+ph+"?text="+encodeURIComponent(msg+" Please pay at your earliest convenience. Thank you!");
+        aw.appendChild(wa);
+      }
+      var ed=el("button","sec nw","✎ Edit");ed.title="Edit";ed.onclick=function(){openDlg(c)};aw.appendChild(ed);
+      var del=el("button","ghost","✕");del.title="Delete";del.onclick=function(){ask("Delete "+c.name+"?",function(){state.customers=state.customers.filter(function(x){return x!==c});save();render();toast("Deleted")})};
+      aw.appendChild(del);ac.appendChild(aw);body.appendChild(tr);
+      /* one bordered line per device; every other cell spans all of them */
+      if(c.devices.length>1){
+        [].forEach.call(tr.cells,function(td){if(td!==c1&&td!==c2)td.rowSpan=c.devices.length});
+        c.devices.slice(1).forEach(function(x){var r=el("tr");cell(r).textContent=x.name||"–";cell(r,"mac").textContent=x.mac||"–";body.appendChild(r)});
+      }
+    });
+    $("ft").textContent=fmt(ft);$("fd").textContent=fmt(fd);
+    var ch=$("chips");ch.textContent="";
+    [["all","All"],["paid","Paid"],["unpaid","Unpaid"]].forEach(function(f){var b=el("button","chip"+(filter===f[0]?" on":""),f[1]);b.onclick=function(){filter=f[0];render()};ch.appendChild(b)});
+    if(!$("rset").children.length)routerCards();
+  }
+
+  function ssids(i){return state.info[i].ssids.map(function(w){return w.name}).filter(Boolean)}
+  var AF={name:"aname",phone:"aphone",email:"aemail",address:"aaddr",note:"anote"};
+  function fillAdmin(){Object.keys(AF).forEach(function(k){$(AF[k]).value=state.biz[k]})}
+  $("adminbtn").onclick=function(){fillAdmin();$("adlg").showModal()};
+  $("acancel").onclick=function(){$("adlg").close()};
+  $("asave").onclick=function(){var o={};Object.keys(AF).forEach(function(k){o[k]=$(AF[k]).value.trim()});state.biz=blankBiz(o);$("adlg").close();save();toast("Service info saved ✓")};
+
+  function field(label,val,secret,onset,ph){
+    var l=el("label",null,label),i=el("input");i.value=val;i.autocomplete="off";i.spellcheck=false;if(ph)i.placeholder=ph;
+    if(secret){i.type=showPw?"text":"password";i.className="pw";i.autocomplete="new-password"}
+    i.onchange=function(){onset(i.value.trim());save()};l.appendChild(i);return l;
+  }
+  function routerCards(){
+    var box=$("rset");box.textContent="";
+    state.routers.forEach(function(n,i){
+      var f=state.info[i],b=el("div","rbox");
+      var nm=field("Router "+(i+1)+" name",n,false,function(v){state.routers[i]=v||"Router "+(i+1);render()});nm.lastChild.maxLength=24;b.appendChild(nm);
+      b.appendChild(field("Default IP",f.ip,false,function(v){f.ip=v;link()},"192.168.0.1"));
+      var a=el("a",null,"Open router page ↗");a.target="_blank";a.rel="noopener";a.style.cssText="background:none;color:var(--accent);padding:0;font-size:.8rem";b.appendChild(a);
+      function link(){var good=/^\d{1,3}(\.\d{1,3}){3}$/.test(f.ip);a.hidden=!good;if(good)a.href="http://"+f.ip;else a.removeAttribute("href")}link();
+      b.appendChild(field("Admin username",f.user,false,function(v){f.user=v},"admin"));
+      b.appendChild(field("Admin password",f.pass,true,function(v){f.pass=v}));
+      f.ssids.forEach(function(w,j){
+        var row=el("div","pair");
+        row.appendChild(field("SSID "+(j+1),w.name,false,function(v){w.name=v}));
+        row.appendChild(field("WiFi password",w.pass,true,function(v){w.pass=v}));
+        var x=el("button","ghost","✕");x.type="button";x.title="Remove SSID";x.onclick=function(){function go(){f.ssids.splice(j,1);if(!f.ssids.length)f.ssids.push({name:"",pass:""});save();routerCards()}if(w.name||w.pass)ask("Remove this SSID?",go);else go()};
+        row.appendChild(x);b.appendChild(row);
+      });
+      var add=el("button","sec","＋ Add SSID");add.type="button";add.onclick=function(){f.ssids.push({name:"",pass:""});save();routerCards()};b.appendChild(add);
+      box.appendChild(b);
+    });
+  }
+
+  function today(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+  $("join").onchange=function(){if(!editing&&this.value)$("start").value=this.value.slice(0,7)};
+  function devRow(d){
+    var r=el("div","dev");
+    [["Device / phone name","dn",d.name,""],["MAC ID","dm",d.mac,"AA:BB:CC:DD:EE:FF"]].forEach(function(f){var l=el("label",null,f[0]),i=el("input",f[1]);i.value=f[2]||"";i.placeholder=f[3];l.appendChild(i);r.appendChild(l)});
+    var x=el("button","ghost","✕");x.type="button";x.title="Remove device";x.onclick=function(){if($("devs").children.length>1)r.remove();else toast("At least one device is needed")};
+    r.appendChild(x);$("devs").appendChild(r);
+  }
+  $("adddev").onclick=function(){devRow({name:"",mac:""})};
+  function openDlg(c){
+    editing=c||null;$("dt").textContent=c?"Edit customer":"Add customer";$("warn").textContent="";
+    $("name").value=c?c.name:"";$("flat").value=c?c.flat||"":"";
+    var pmSel=$("method");if(!pmSel.children.length)METHODS.forEach(function(x){var o=el("option",null,x);o.value=x;pmSel.appendChild(o)});
+    pmSel.value=(c&&((isPaid(c)&&c.pm[cur])||c.method))||"Cash";$("phone").value=c?c.phone||"":"";$("devs").textContent="";(c?c.devices:[{name:"",mac:""}]).forEach(devRow);
+    $("router").value=c?c.router:0;$("bill").value=c?(isPaid(c)?amount(c):billFor(c)):"";$("start").value=c?c.start||"":real;$("notex").value=c?c.note||"":"";
+    $("join").value=c?c.join||"":today();$("type").value=c&&c.type==="post"?"post":"pre";
+    $("dlg").showModal();
+  }
+  $("add").onclick=function(){openDlg(null)};
+  $("cancel").onclick=function(){$("dlg").close()};
+  $("form").addEventListener("submit",function(e){e.preventDefault();saveCustomer()});
+  $("savebtn").onclick=saveCustomer;
+  $("form").addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target.tagName==="INPUT"){e.preventDefault();saveCustomer()}});
+  function invalid(msg,id){$("warn").textContent=msg;toast(msg);$(id).focus()}
+  function saveCustomer(){
+    var b=parseFloat($("bill").value);
+    if(!$("name").value.trim())return invalid("Customer name লিখুন","name");
+    if(isNaN(b)||b<0)return invalid("Monthly bill লিখুন","bill");
+    var devices=[].map.call($("devs").children,function(r){return {name:r.querySelector(".dn").value.trim(),mac:r.querySelector(".dm").value.trim().toUpperCase()}}).filter(function(d){return d.name||d.mac});
+    if(!devices.length)devices=[{name:"",mac:""}];
+    var dup=state.customers.filter(function(c){return c!==editing&&c.devices.some(function(a){return devices.some(function(b){return a.mac&&a.mac===b.mac})})})[0];
+    var o={name:$("name").value.trim(),flat:$("flat").value.trim(),method:$("method").value,phone:$("phone").value.trim(),devices:devices,router:+$("router").value||0,bill:b,start:$("start").value||cur,join:$("join").value,type:$("type").value,note:$("notex").value.trim()};
+    if(editing){if(b!==(isPaid(editing)?amount(editing):billFor(editing))){setBill(editing,b,cur);if(isPaid(editing))editing.paid[cur]=b}if(isPaid(editing))editing.pm[cur]=o.method;delete o.bill;Object.assign(editing,o)}else{o.paid={};o.pm={};o.pd={};o.id=newId();state.customers.push(o)}
+    $("dlg").close();save();render();toast(dup?"Saved · note: MAC already used by "+dup.name:"Saved ✓");
+  }
+
+  function persist(){
+    try{localStorage.setItem(LS,JSON.stringify(state))}catch(e){if(!ref)toast("⚠ Could not save! Download a backup")}
+  }
+  function save(){
+    state.updated=Date.now();persist();
+    clearTimeout(t);
+    t=setTimeout(function(){
+      if(ref)ref.set({customers:state.customers,routers:state.routers,info:state.info,biz:state.biz,dueDay:state.dueDay,updated:state.updated}).catch(function(){toast("⚠ Online save failed")});
+    },200);
+  }
+  function newId(){return Math.random().toString(36).slice(2,7).toUpperCase()}
+  function clean(c){
+    ["name","phone","date","start","note","join","flat"].forEach(function(k){c[k]=c[k]==null?"":String(c[k])});
+    c.bill=Number(c.bill)||0;c.router=[0,1,2,3].indexOf(+c.router)<0?0:+c.router;c.type=c.type==="post"?"post":"pre";if(!c.id)c.id=newId();c.method=METHODS.indexOf(c.method)<0?"":c.method;c.paid=c.paid||{};c.pm=c.pm||{};c.pd=c.pd||{};
+    var list=Array.isArray(c.devices)?c.devices:[{name:c.device,mac:c.mac}];
+    c.devices=list.map(function(d){return {name:String((d&&d.name)||""),mac:String((d&&d.mac)||"")}});
+    if(!c.devices.length)c.devices=[{name:"",mac:""}];delete c.device;delete c.mac;return c;
+  }
+  function load(o){
+    if(!o)return;
+    if(Array.isArray(o.customers))state.customers=o.customers.filter(Boolean).map(clean);
+    if(Array.isArray(o.routers)&&o.routers.length===4)state.routers=o.routers;
+    state.info=blankInfo(o.info);state.dueDay=+o.dueDay||0;if(o.biz)state.biz=blankBiz(o.biz);
+    state.updated=o.updated||0;
+  }
+  var billOf=null,billCv=null;
+  function invoice(c){
+    var W=1000,M=60,F='system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Bengali",sans-serif',tmp=document.createElement("canvas"),g,y,biz=state.biz,NAVY="#1f2a52",GREY="#6b7280",LINE="#d9dce8";
+    tmp.width=W;tmp.height=2200;g=tmp.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,W,tmp.height);g.textBaseline="middle";
+    function font(size,bold){g.font=(bold?"700 ":"400 ")+size+"px "+F}
+    function text(t,x,yy,size,bold,color,right,max){font(size,bold);g.fillStyle=color||"#1a1d29";g.textAlign=right?"right":"left";t=String(t);if(max&&g.measureText(t).width>max){while(t.length&&g.measureText(t+"…").width>max)t=t.slice(0,-1);t+="…"}g.fillText(t,x,yy)}
+    function wrap(t,size,max){font(size);var out=[];String(t).split("\n").forEach(function(p){var line="";p.split(/\s+/).forEach(function(word){
+      var next=line?line+" "+word:word;if(g.measureText(next).width<=max){line=next;return}if(line)out.push(line);line="";
+      Array.from(word).forEach(function(ch){if(g.measureText(line+ch).width>max){out.push(line);line=""}line+=ch})});out.push(line)});return out}
+    function box(x,yy,w,h,fill){g.fillStyle=fill;g.fillRect(x,yy,w,h)}
+    function trow(a,b,head,shade){var h=head?46:42;if(head||shade)box(M,y,W-2*M,h,head?NAVY:"#f5f6fb");text(a,M+16,y+h/2,head?19:21,head,head?"#fff":null,false,560);text(b,W-M-16,y+h/2,head?19:21,true,head?"#fff":null,true,260);y+=h;if(!head)box(M,y-1,W-2*M,1,LINE)}
+    var iv=invoiceData(c),paid=iv.total===0,d=dueDate(c),fee=isPaid(c)?amount(c):billFor(c);
+    /* service header */
+    box(0,0,W,12,"#5b6cff");
+    var title=biz.name||"Wifi Bill",ts=40;font(ts,true);while(ts>22&&g.measureText(title).width>560){ts-=2;font(ts,true)}text(title,M,68,ts,true,NAVY,false,560);
+    var hy=110;[biz.address,biz.phone?"Phone: "+biz.phone:"",biz.email?"Email: "+biz.email:""].filter(Boolean).forEach(function(t){text(t,M,hy,19,false,GREY,false,560);hy+=29});
+    text(paid?"RECEIPT":"INVOICE",W-M,68,38,true,"#5b6cff",true);
+    text("Bill no: "+cur.replace("-","")+"-"+c.id,W-M,110,19,false,GREY,true);
+    text("Issue date: "+fdate(today()),W-M,139,19,false,GREY,true);
+    text("Billing month: "+mlabel(cur),W-M,168,19,false,GREY,true);
+    y=Math.max(hy,196)+4;box(M,y,W-2*M,2,NAVY);y+=34;
+    /* customer and connection side by side */
+    function column(x,title,pairs){var yy=y;text(title,x,yy,17,true,"#5b6cff");yy+=36;pairs.forEach(function(p){text(p[0],x,yy,19,false,GREY,false,140);text(p[1],x+150,yy,19,true,null,false,270);yy+=32});return yy}
+    var left=column(M,"BILL TO",[["Name",c.name],["Flat",c.flat||"–"],["Phone",c.phone||"–"],["Join date",fdate(c.join)],["Type",post(c)?"Postpaid":"Prepaid"]]);
+    var names=ssids(c.router),net=[["Router",state.routers[c.router]]];(names.length?names:["–"]).slice(0,6).forEach(function(n,i){net.push([i?"":"SSID",n])});
+    var right=column(540,"CONNECTION",net);
+    y=Math.max(left,right)+12;
+    trow("Device","MAC ID",true);c.devices.slice(0,6).forEach(function(x,i){trow(x.name||"Device "+(i+1),x.mac||"–")});
+    if(c.devices.length>6)trow("+ "+(c.devices.length-6)+" more device(s)","");y+=26;
+    trow("Description","Amount",true);
+    trow("Internet bill — "+mlabel(cur)+(isPaid(c)?" (Paid)":""),fmt(fee));
+    var old=iv.prev.slice(0,-6),shown=iv.prev.slice(-6);
+    if(old.length)trow("Previous due — "+old.length+" older month(s)",fmt(sumBills(c,old)),false,true);
+    shown.forEach(function(m){trow("Previous due — "+mlabel(m),fmt(billFor(c,m)),false,true)});
+    /* a receipt also lists older months collected on the same day */
+    var also=isPaid(c)&&c.pd[cur]?Object.keys(c.paid).filter(function(m){return m<cur&&isPaid(c,m)&&c.pd[m]===c.pd[cur]}).sort():[],got=fee+also.reduce(function(a,m){return a+amount(c,m)},0);
+    if(also.length>6){var first=also.slice(0,-6);trow("Previous due (Paid) — "+first.length+" older month(s)",fmt(first.reduce(function(a,m){return a+amount(c,m)},0)),false,true)}
+    also.slice(-6).forEach(function(m){trow("Previous due — "+mlabel(m)+" (Paid)",fmt(amount(c,m)),false,true)});
+    y+=18;box(520,y,W-M-520,86,paid?"#e7f8f1":"#fdecec");text(paid?"Balance due":"Total payable",544,y+43,24,true);text(fmt(iv.total),W-M-20,y+43,38,true,paid?"#0b8a60":"#c62828",true);
+    text(paid?"PAID":"DUE",M,y+43,52,true,paid?"#0b8a60":"#c62828");y+=122;
+    if(isPaid(c))text("Paid on "+fdate(c.pd[cur])+"   |   Method: "+(c.pm[cur]||"Cash")+"   |   Amount: "+fmt(got),M,y,20,true);
+    else text("Payment date: "+(d?fdate(d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate()):"–"),M,y,20,true);
+    y+=44;
+    if(biz.note){var lines=wrap(biz.note,19,W-2*M-40);box(M,y,W-2*M,58+lines.length*29,"#f5f6fb");text("NOTE",M+20,y+26,17,true,"#5b6cff");lines.forEach(function(l,i){text(l,M+20,y+58+i*29,19)});y+=70+lines.length*29}
+    var H=Math.max(1414,Math.ceil(y)+130),cv=document.createElement("canvas");cv.width=W;cv.height=H;g=cv.getContext("2d");g.drawImage(tmp,0,0);if(H>tmp.height)box(0,tmp.height,W,H-tmp.height,"#fff");g.textBaseline="middle";
+    box(M,H-100,W-2*M,1,LINE);g.textAlign="center";
+    var contact=[biz.name,biz.phone,biz.email].filter(Boolean).join("   •   ");
+    font(21,true);g.fillStyle=NAVY;g.fillText("Thank you!",W/2,H-70);font(17);g.fillStyle=GREY;g.fillText(contact,W/2,H-38,W-2*M);
+    return cv;
+  }
+  function refreshBill(){
+    var c=billOf,iv=invoiceData(c);billCv=invoice(c);$("bimg").src=billCv.toDataURL("image/png");
+    $("bpay").hidden=!iv.total;$("bpay").textContent="✓ Received "+fmt(iv.total);
+    $("paybox").hidden=!iv.total&&!isPaid(c);
+    $("bdate").value=isPaid(c)&&!iv.total?c.pd[cur]||"":today();
+    $("bmethod").value=(isPaid(c)&&c.pm[cur])||"Cash";
+  }
+  function openBill(c){billOf=c;var s=$("bmethod");if(!s.children.length)METHODS.forEach(function(x){var o=el("option",null,x);o.value=x;s.appendChild(o)});refreshBill();$("bdlg").showModal()}
+  /* once nothing is due, the two fields correct the record of the month on screen */
+  function editPayment(){var c=billOf;if(!isPaid(c)||invoiceData(c).total)return;c.pd[cur]=$("bdate").value;c.pm[cur]=$("bmethod").value;save();render();refreshBill()}
+  $("bdate").onchange=editPayment;$("bmethod").onchange=editPayment;
+  $("bpay").onclick=function(){
+    var c=billOf,iv=invoiceData(c),on=$("bdate").value||today(),how=$("bmethod").value;
+    ask("Mark "+fmt(iv.total)+" as received from "+c.name+"?",function(){iv.prev.concat(isPaid(c)?[]:[cur]).forEach(function(m){setPaid(c,m,on,how)});save();render();refreshBill();toast("Payment saved ✓")});
+  };
+  function billName(ext){return "bill-"+(billOf.name.replace(/[\\/:*?"<>|\s]+/g,"-")||"customer")+"-"+cur+"."+ext}
+  $("bjpg").onclick=function(){var n=billName("jpg");billCv.toBlob(function(b){dl(n,b)},"image/jpeg",.92)};
+  $("bpdf").onclick=function(){dl(billName("pdf"),makePdf([billCv]))};
+  $("bclose").onclick=function(){$("bdlg").close()};
+  function report(){
+    var W=1684,H=1191,M=60,F='system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Bengali",sans-serif',pages=[],g,y;
+    function page(){var cv=document.createElement("canvas");cv.width=W;cv.height=H;g=cv.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,W,H);g.textBaseline="middle";pages.push(cv);y=M}
+    function text(t,x,yy,size,bold,color,max,right){
+      g.font=(bold?"700 ":"400 ")+size+"px "+F;g.fillStyle=color||"#1a1d29";t=String(t);
+      if(max&&g.measureText(t).width>max){while(t.length&&g.measureText(t+"…").width>max)t=t.slice(0,-1);t+="…"}
+      g.textAlign=right?"right":"left";g.fillText(t,x,yy);
+    }
+    function table(title,cols,rows){
+      function head(){var x=M;g.fillStyle="#5b6cff";g.fillRect(M,y,W-2*M,40);cols.forEach(function(c){text(c[0],c[2]?x+c[1]-8:x+8,y+20,17,true,"#fff",c[1]-14,c[2]);x+=c[1]});y+=40}
+      if(y+160>H-M)page();
+      text(title,M,y+18,25,true);y+=46;head();
+      rows.forEach(function(r,n){
+        var lines=Math.max.apply(null,r.map(function(v){return Array.isArray(v)?v.length:1})),h=38+(lines-1)*24;
+        if(y+h>H-M){page();head()}
+        if(n%2){g.fillStyle="#f1f3fb";g.fillRect(M,y,W-2*M,h)}
+        var x=M;cols.forEach(function(c,i){[].concat(r[i]).forEach(function(v,k){text(v,c[2]?x+c[1]-8:x+8,y+19+k*24,16,false,null,c[1]-12,c[2])});x+=c[1]});y+=h;
+      });
+      if(!rows.length){text("No data",M+8,y+19,17,false,"#6b7280");y+=38}
+      y+=28;
+    }
+    var all=state.customers.filter(function(c){return active(c,cur)}).sort(function(a,b){return a.name.localeCompare(b.name)});
+    var total=0,paid=0,np=0,out=0,npost=0,by={};
+    all.forEach(function(c){var v=isPaid(c)?amount(c):billFor(c);total+=v;if(isPaid(c)){paid+=v;np++;var m=(c.pm&&c.pm[cur])||"Cash";by[m]=(by[m]||0)+v}if(post(c))npost++});
+    state.customers.forEach(function(c){out+=balance(c)});
+    page();
+    text((state.biz.name||"Wifi Bill")+" — Report, "+mlabel(cur),M,y+22,38,true,null,W-2*M);y+=62;
+    var contact=[state.biz.address,state.biz.phone,state.biz.email].filter(Boolean).join("   |   ");if(contact){text(contact,M,y-6,18,false,"#6b7280",W-2*M);y+=28}
+    text("Generated: "+fdate(today())+"   |   Due is calculated as of today",M,y,18,false,"#6b7280");y+=34;
+    var box=[["Month total",fmt(total)],["Collected",fmt(paid)],["Pending",fmt(total-paid)],["Total due",fmt(out)],["Paid customers",np+" / "+all.length],["Prepaid / Postpaid",(all.length-npost)+" / "+npost]],bw=(W-2*M-50)/6;
+    box.forEach(function(b,i){var x=M+i*(bw+10);g.fillStyle="#eef0ff";g.fillRect(x,y,bw,86);text(b[1],x+14,y+32,28,true,null,bw-24);text(b[0],x+14,y+66,16,false,"#6b7280",bw-24)});y+=116;
+    table("Router summary",[["Router",420],["Customers",180,1],["Month total",260,1],["Collected",260,1],["Pending",260,1],["Collection rate",184,1]],state.routers.map(function(n,i){var k=0,t=0,p=0;all.forEach(function(c){if(c.router===i){k++;var v=isPaid(c)?amount(c):billFor(c);t+=v;if(isPaid(c))p+=v}});return [n,k,fmt(t),fmt(p),fmt(t-p),t?Math.round(p/t*100)+"%":"–"]}));
+    table("Collection by method",[["Method",420],["Amount",260,1]],Object.keys(by).map(function(m){return [m,fmt(by[m])]}));
+    table("Customers",[["Name",160],["Flat",70],["Phone",130],["Device",130],["MAC",170],["Joined",118],["Router",103],["Type",98],["Bill",90,1],["Pay by",80],["Status",90],["Paid on",120],["Method",80],["Due",125,1]],all.map(function(c){var d=dueDate(c),s=status(c),p=isPaid(c);return [c.name,c.flat||"–",c.phone||"–",c.devices.map(function(x){return x.name||"–"}),c.devices.map(function(x){return x.mac||"–"}),fdate(c.join),state.routers[c.router],post(c)?"Postpaid":"Prepaid",fmt(p?amount(c):billFor(c)),d?d.toLocaleDateString("en-GB",{day:"numeric",month:"short"}):"–",s==="p"?"Paid":s==="o"?"Overdue":"Unpaid",p?fdate(c.pd[cur]):"–",p?c.pm[cur]||"Cash":"–",fmt(balance(c))]}));
+    pages.forEach(function(cv,i){g=cv.getContext("2d");text("Page "+(i+1)+" of "+pages.length,W-M,H-28,15,false,"#6b7280",0,true)});
+    return makePdf(pages);
+  }
+  /* A4 landscape PDF, one JPEG per page, so Bangla text and ৳ print correctly without any library */
+  function makePdf(pages){
+    var enc=new TextEncoder(),parts=[],len=0,off=[],n=2+pages.length*3;
+    function put(x){var b=typeof x==="string"?enc.encode(x):x;parts.push(b);len+=b.length}
+    function obj(id,body,stream){off[id]=len;put(id+" 0 obj\n"+body+"\n");if(stream){put("stream\n");put(stream);put("\nendstream\n")}put("endobj\n")}
+    put("%PDF-1.4\n");
+    obj(1,"<</Type/Catalog/Pages 2 0 R>>");
+    obj(2,"<</Type/Pages/Count "+pages.length+"/Kids["+pages.map(function(_,i){return (3+i*3)+" 0 R"}).join(" ")+"]>>");
+    pages.forEach(function(cv,i){
+      var p=3+i*3,bin=atob(cv.toDataURL("image/jpeg",.92).split(",")[1]),img=new Uint8Array(bin.length);
+      for(var k=0;k<bin.length;k++)img[k]=bin.charCodeAt(k);
+      var pw=cv.width>cv.height?842:595,ph=Math.round(pw*cv.height/cv.width),draw="q "+pw+" 0 0 "+ph+" 0 0 cm /I Do Q";
+      obj(p,"<</Type/Page/Parent 2 0 R/MediaBox[0 0 "+pw+" "+ph+"]/Resources<</XObject<</I "+(p+2)+" 0 R>>>>/Contents "+(p+1)+" 0 R>>");
+      obj(p+1,"<</Length "+draw.length+">>",draw);
+      obj(p+2,"<</Type/XObject/Subtype/Image/Width "+cv.width+"/Height "+cv.height+"/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/DCTDecode/Length "+img.length+">>",img);
+    });
+    var x=len;put("xref\n0 "+(n+1)+"\n0000000000 65535 f \n");
+    for(var j=1;j<=n;j++)put(String(off[j]).padStart(10,"0")+" 00000 n \n");
+    put("trailer\n<</Size "+(n+1)+"/Root 1 0 R>>\nstartxref\n"+x+"\n%%EOF");
+    return new Blob(parts,{type:"application/pdf"});
+  }
+  async function dl(name,txt){
+    try{var d=await claude.use("downloads");if(d){await d.save({filename:name,data:txt});return}}catch(e){}
+    try{var a=document.createElement("a"),u=URL.createObjectURL(txt instanceof Blob?txt:new Blob([txt],{type:"application/json"}));
+      a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},1000)}
+    catch(e){toast("Download isn't available in this view")}
+  }
+
+  $("prev").onclick=function(){cur=shift(cur,-1);render()};
+  $("next").onclick=function(){cur=shift(cur,1);render()};
+  ["q","fr","ftype","sort"].forEach(function(id){$(id).addEventListener(id==="q"?"input":"change",render)});
+  $("theme").onclick=function(){
+    var r=document.documentElement,dark=r.getAttribute("data-theme")==="dark"||(!r.getAttribute("data-theme")&&matchMedia("(prefers-color-scheme:dark)").matches);
+    var th=dark?"light":"dark";r.setAttribute("data-theme",th);try{localStorage.setItem(LS+"-theme",th)}catch(e){}
+  };
+  $("allpaid").onclick=function(){
+    if(!current.length)return;
+    ask("Mark "+current.length+" shown customer(s) as paid for "+mlabel(cur)+"?",function(){current.forEach(function(c){setPaid(c,cur)});save();render();toast("Marked paid ✓")});
+  };
+  $("daybtn").onclick=function(){
+    var s=$("dday");if(!s.children.length){var z=el("option",null,"Not set");z.value=0;s.appendChild(z);for(var i=1;i<=31;i++){var o=el("option",null,String(i));o.value=i;s.appendChild(o)}}
+    s.value=state.dueDay;$("ddlg").showModal();
+  };
+  $("dcancel").onclick=function(){$("ddlg").close()};
+  $("dsave").onclick=function(){state.dueDay=+$("dday").value;$("ddlg").close();save();render();toast("Billing date saved ✓")};
+  $("pdf").onclick=function(){try{dl("wifi-report-"+cur+".pdf",report())}catch(e){toast("Could not create PDF")}};
+  $("showpw").onclick=function(){showPw=!showPw;this.textContent=showPw?"🙈 Hide passwords":"👁 Show passwords";[].forEach.call(document.querySelectorAll(".pw"),function(i){i.type=showPw?"text":"password"})};
+  $("bk").onclick=function(){dl("wifi-backup-"+real+".json",JSON.stringify(state,null,1))};
+  $("rs").onclick=function(){$("file").click()};
+  $("file").onchange=function(){
+    var f=this.files[0];if(!f)return;var r=new FileReader();
+    r.onload=function(){try{var o=JSON.parse(r.result);if(!Array.isArray(o.customers))throw 0;
+      ask("Replace all current data with this backup ("+o.customers.length+" customers)?",function(){load(o);$("rset").textContent="";save();render();toast("Backup restored ✓")})}
+      catch(e){toast("Invalid backup file")}};
+    r.readAsText(f);this.value="";
+  };
+
+  try{var th0=localStorage.getItem(LS+"-theme");if(th0)document.documentElement.setAttribute("data-theme",th0)}catch(e){}
+  try{var raw=localStorage.getItem(LS);if(raw){load(JSON.parse(raw));persist()}}catch(e){}
+  render();
+  try{localStorage.setItem(LS+"-test","1");localStorage.removeItem(LS+"-test");$("where").textContent="Saved in this browser."}
+  catch(e){$("where").textContent="⚠ This preview cannot save data. Download the file and open it in Chrome.";$("where").style.color="var(--bad)"}
+  window.addEventListener("storage",function(e){if(e.key!==LS||!e.newValue)return;try{load(JSON.parse(e.newValue));$("rset").textContent="";render()}catch(x){}});
+  (async function(){
+    try{
+      if(!window.claude||!claude.use)return;
+      var db=await claude.use("db"),user=await claude.use("user");if(!db||!user)return;
+      var id=await user.id();if(!id)return;
+      ref=db.collection("data/users/"+id).doc("wifi-mgr");
+      var s=await ref.get();
+      var remote=s.exists?s.data():null;if(remote&&(remote.updated||0)>=(state.updated||0)){load(remote);persist();$("rset").textContent="";render();if($("adlg").open)fillAdmin()}else if(state.customers.length)save();
+      $("where").textContent="Saved to your private account storage.";
+    }catch(e){}
+  })();
+})();
+</script>
+</body>
+</html>
